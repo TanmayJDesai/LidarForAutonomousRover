@@ -1,3 +1,5 @@
+WORKING CODE:
+
 #include <RPLidar.h>
 #include <SoftwareSerial.h>
 RPLidar lidar;
@@ -8,11 +10,11 @@ RPLidar lidar;
 #define LED_B       10
 #define RPLIDAR_MOTOR 5
 
-#define RPLIDAR_RX 0 // RPLIDAR RX pin
-#define RPLIDAR_TX 1 // RPLIDAR TX pin
+#define RPLIDAR_RX 16 // RPLIDAR RX pin
+#define RPLIDAR_TX 17 // RPLIDAR TX pin
 
-#define LAPTOP_RX 2// Laptop RX pin
-#define LAPTOP_TX 3 // Laptop TX pin
+#define LAPTOP_RX 0// Laptop RX pin
+#define LAPTOP_TX 1 // Laptop TX pin
 
 //SoftwareSerial mySerial(3, 4);
 
@@ -117,3 +119,26 @@ void loop() {
     }
   }
 }
+
+
+/*#include <RPLidar.h>
+RPLidar lidar;
+
+#define RPLIDAR_RX 1 // RPLIDAR RX pin
+#define RPLIDAR_TX 2 // RPLIDAR TX pin
+
+void setup() {
+  lidar.begin(Serial);
+  Serial.begin(115200);
+}
+
+void loop() {
+  if (IS_OK(lidar.waitPoint())) {
+    float distance = lidar.getCurrentPoint().distance;
+    float angle = lidar.getCurrentPoint().angle;
+    Serial.print("Angle: ");
+    Serial.print(angle);
+    Serial.print(", Distance: ");
+    Serial.println(distance);
+  }
+}*/
