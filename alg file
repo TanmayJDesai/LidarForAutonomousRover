@@ -1,0 +1,95 @@
+#include <RPLidar.h>
+#include <SoftwareSerial.h>
+RPLidar lidar;
+
+#define LED_ENABLE  12
+#define LED_R       9
+#define LED_G       11
+#define LED_B       10
+#define RPLIDAR_MOTOR 5
+
+#define RPLIDAR_RX 16 // RPLIDAR RX pin
+#define RPLIDAR_TX 17 // RPLIDAR TX pin
+
+#define LAPTOP_RX 0// Laptop RX pin
+#define LAPTOP_TX 1 // Laptop TX pin
+
+#define NUM_SCANS 5 // Number of times the lidar spins
+#define MIN_QUALITY 5 // Minimum quality threshold
+#define INTERVAL_SIZE 30 // Number of distances to collect before finding the max
+
+void setup() {
+  Serial.begin(9600);
+  Serial2.begin(115200);
+
+  lidar.begin(Serial2);
+
+  pinMode(RPLIDAR_MOTOR, OUTPUT);
+
+  pinMode(LED_ENABLE, OUTPUT);
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_B, OUTPUT);
+
+  digitalWrite(LED_ENABLE, HIGH);
+
+  analogWrite(LED_R,255);
+  analogWrite(LED_G,255);
+  analogWrite(LED_B,255);
+
+  Serial.print("hello");
+  //Serial2.print("hello");
+}
+
+float minDistance = 100000;
+float angleAtMinDist = 0;
+
+
+void loop() {
+  static int scanCount = 0;
+  static float distances[INTERVAL_SIZE];
+  static int distanceCount = 0;
+
+  if (scanCount < NUM_SCANS) {
+    if (IS_OK(lidar.waitPoint())) {
+      float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+      float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
+      bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
+      byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
+
+      if (quality > MIN_QUALITY) {
+        distances[distanceCount] = distance;
+        distanceCount++;
+        if (distanceCount >= INTERVAL_SIZE) {
+          // Find the maximum distance
+          float maxDistance = distances[0];
+          for (int i = 1; i < INTERVAL_SIZE; i++) {
+            if (distances[i] > maxDistance) {
+              maxDistance = distances[i];
+            }
+          }
+          // Print the maximum distance
+          Serial.print("Max Distance in Interval: ");
+          Serial.println(maxDistance);
+
+          // Reset distanceCount for the next interval
+          distanceCount = 0;
+        }
+      }
+    } else {
+      analogWrite(RPLIDAR_MOTOR, 0); //stop the rplidar motor
+
+      // try to detect RPLIDAR... 
+      rplidar_response_device_info_t info;
+      if (IS_OK(lidar.getDeviceInfo(info, 100))) {
+         // detected...
+         lidar.startScan();
+
+         // start motor rotating at max allowed speed
+         analogWrite(RPLIDAR_MOTOR, 255);
+         delay(1000);
+         scanCount++;
+      }
+    }
+  } 
+}
